@@ -56,8 +56,38 @@ impl Uri{
 mod tests {
     use super::*;
     #[test]
-    fn scheme_parse(){
-        let uri = Uri::from_string("http://www.example.com/index".to_string());
-        assert_eq!("http".to_string(), uri.get_scheme());
+    fn empty_scheme_parse(){
+        let test_cases = vec![
+            "//foo:bar@www.example.com/",
+            "//www.example.com/a:b",
+            "//www.example.com/foo?a:b",
+            "//www.example.com/foo#a:b",
+            "//[v7.:]/",
+            "/:/foo",
+            "/home/example"
+        ];
+        for test_case in test_cases {
+            let uri = Uri::from_string(test_case.to_string());
+            assert_eq!("".to_string(), uri.get_scheme());
+        }
+        
+    }
+
+    #[test]
+    fn nonempty_scheme_parse(){
+        let test_cases = vec![
+            ("http://foo:bar@www.example.com/", "http"),
+            ("https://foo:bar@www.example.com/", "https"),
+            ("ftp://192.168.0.100", "ftp"),
+            ("sftp://192.168.0.100", "sftp"),
+            ("file:///home/example", "file")
+        ];
+
+        for test_case in test_cases {
+            let (_uri, _scheme) = test_case;
+            let uri = Uri::from_string(_uri.to_string());
+            assert_eq!(_scheme.to_string(), uri.get_scheme());
+        }
+        
     }
 }
