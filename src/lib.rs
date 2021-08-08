@@ -1,7 +1,9 @@
 mod uri;
+mod authority;
 
 pub use crate::{
-    uri::Uri
+    uri::Uri,
+    authority::Authority
 };
 
 #[cfg(test)]
