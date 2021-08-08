@@ -29,7 +29,19 @@ impl Authority{
         }
     }
 
+    // fn parse_user_info(&self, string: &String) {
+    
+    // }
+
     pub fn get_host(&self) -> &str {
         &self.host
+    }
+
+    pub fn get_port(&self) -> &Option<u16> {
+        &self.port
+    }
+
+    pub fn get_user_info(&self) -> &Option<String> {
+        &self.user_info
     }
 }
