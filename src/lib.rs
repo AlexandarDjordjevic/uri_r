@@ -19,8 +19,16 @@ mod tests {
             "/home/example"
         ];
         for test_case in test_cases.iter() {
-            let uri = uri::Uri::from_string(test_case.to_string());
-            assert_eq!(Option::None, uri.get_scheme());
+            let result = uri::Uri::from_string(test_case.to_string());
+            match result {
+                Ok(uri) => {
+                    assert_eq!(Option::None, uri.get_scheme());
+                }
+                Err(message) =>{
+                    println!("Error message: {}", message);
+                    assert_eq!(true, false);
+                }
+            }
         }
         
     }
@@ -30,8 +38,8 @@ mod tests {
         let test_cases = vec![
             ("http://foo:bar@www.example.com/", "http"),
             ("https://foo:bar@www.example.com/", "https"),
-            ("ftp://192.168.0.100", "ftp"),
-            ("sftp://192.168.0.100", "sftp"),
+            ("ftp://192.168.0.100/", "ftp"),
+            ("sftp://192.168.0.100/", "sftp"),
             ("file:///home/example", "file"),
             ("ldap://[2001:db8::7]/c=GB?objectClass?one", "ldap"),
             ("mailto:John.Doe@example.com", "mailto"),
@@ -43,8 +51,17 @@ mod tests {
 
         for test_case in test_cases.iter() {
             let (_uri, _scheme) = test_case;
-            let uri = uri::Uri::from_string(_uri.to_string());
-            assert_eq!(_scheme.to_string(), uri.get_scheme().unwrap().to_string());
+            let result = uri::Uri::from_string(_uri.to_string());
+            match result {
+                Ok(uri) => {
+                    assert_eq!(_scheme.to_string(), uri.get_scheme().unwrap().to_string());
+                },
+                Err(message) =>{
+                    println!("Error message: {}", message);
+                    assert_eq!(true, false);
+                }
+            }
+            
         }
         
     }
