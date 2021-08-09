@@ -48,11 +48,12 @@ impl Uri {
         let (scheme, uri) = Uri::parse_scheme(uri);
         _uri.scheme = scheme;
 
-        let (auth, uri) = Authority::from_string(uri.as_ref());
+        let (auth, uri) = Authority::from_string(&uri);
         _uri.authority = auth;
         match &_uri.authority {
             Some(authority) => {
                 println!("Authority host: {}", authority.get_host());
+                println!("Authority user info: {:?}", authority.get_user_info());
             },
             None => ()
         }
