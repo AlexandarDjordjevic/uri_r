@@ -6,6 +6,8 @@ pub struct Authority {
     port: Option<u16>,
 }
 
+#[allow(unused_variables)]
+#[allow(dead_code)]
 impl Authority{
     pub fn from_string(uri: &str) -> (Option<Authority> , &str){
         let start_index = uri.find("//");
@@ -29,9 +31,31 @@ impl Authority{
         }
     }
 
-    // fn parse_user_info(&self, string: &String) {
-    
-    // }
+    fn get_authority_from_string(string: &String) -> Option<String> {
+        let start_index = string.find("//");
+        match start_index {
+            Some(start_index) => {
+                let auth = &string[start_index + 2 ..];
+                let end_index = auth.find("/").unwrap_or(
+                    auth.find("#").unwrap_or(
+                        auth.find("?").unwrap_or(auth.len())
+                    )
+                );
+                Some(auth[..end_index].to_string())
+            },
+            None => None
+        }
+    }
+
+    fn parse_user_info(& mut self, string: &String) -> Option<String> {
+        let index = string.find("@");
+        match index {
+            None => None,
+            Some(index) => {
+                Some(string[.. index].to_string())
+            }
+        }
+    }
 
     pub fn get_host(&self) -> &str {
         &self.host
