@@ -18,14 +18,8 @@ impl Authority{
         }
     }
 
-    //Public functions ------------------------------
-
     pub fn from_string(auth_string: &str) -> Option<Authority> {
-        let mut authority= Authority {
-            user_info: None,
-            host: "".to_string(),
-            port: None
-        };
+        let mut authority= Authority::new();
         //Convert to lower case
         let auth_lc = &auth_string.to_lowercase();
 
