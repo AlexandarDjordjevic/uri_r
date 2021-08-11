@@ -1,5 +1,8 @@
 use regex::Regex;
 
+/// User information URI component.  <br />
+/// May consist of a user name and, optionally, scheme-specific information 
+/// about how to gain authorization to access the resource
 #[allow(unused_variables)]
 #[allow(dead_code)]
 pub struct UserInfo{
@@ -26,10 +29,14 @@ impl UserInfo {
         }
     }
 
+    /// Method returns username <br />
+    /// - ***return \[ &str \]***: Username string reference
     fn get_username(&self) -> &str {
         self.username.as_ref()
     }
 
+    /// Method returns password <br />
+    /// - ***return \[ Option\<&String\> \]***: Password if it is available, otherwise **None**
     fn get_password(&self) -> Option<&String>{
         match self.password.as_ref() {
             None => None,
@@ -47,6 +54,8 @@ pub struct Authority {
 #[allow(unused_variables)]
 #[allow(dead_code)]
 impl Authority{
+    /// Constructor for Authority object
+    /// - ***return \[Authority\]*** New, empty object 
     pub fn new() -> Self {
         Authority{
             user_info: None,
@@ -55,9 +64,17 @@ impl Authority{
         }
     }
 
+    /// This method is used to parse URI authority from string
+    /// - ***param \[ &str ]***: authority string reference meant for parsing 
+    /// - ***return \[ Option\<Authority\>\]***: Authority, if it is part of the string, otherwise ***None***
     pub fn from_string(auth_string: &str) -> Option<Authority> {
         let mut authority= Authority::new();
         
+
+        if auth_string.is_empty() {
+            return None;
+        }
+
         //Convert to lower case string
         let auth_lc = &auth_string.to_lowercase();
 
@@ -91,18 +108,24 @@ impl Authority{
         }
         Some(authority)
     }
-
+    
+    /// This method is used to get authority host  
+    /// - ***return \[&str\]***: Reference to the host string
     pub fn get_host(&self) -> &str {
         &self.host
     }
 
+    /// This method is used to get authority port number
+    /// - ***return \[ Option\<u16\>\]***: port number if authority string contains port, otherwise **None**
     pub fn get_port(&self) -> Option<u16> {
        match self.port {
            None => None,
            Some(port) => Some(port)
-       }
+       }    
     }
 
+    /// This method is used to get authority user info  
+    /// - ***return \[Option\<&UserInfo\>\]***: If user info is available returns &UserInfo, otherwise ***None***
     pub fn get_user_info(&self) -> Option<&UserInfo> {
         match self.user_info.as_ref() {
             None => None,
@@ -117,6 +140,7 @@ fn test_authority_parser(){
     use super::*;
 
     let authority = Authority::from_string("foo:bar@www.example.com");
+
     assert_eq!(authority.as_ref().unwrap().get_host(), "www.example.com");
     assert_eq!(authority.as_ref().unwrap().get_user_info().unwrap().get_username(), "foo");
     assert_eq!(authority.as_ref().unwrap().get_user_info().unwrap().get_password().unwrap(), "bar");
@@ -129,4 +153,7 @@ fn test_authority_parser(){
     assert_eq!(authority.as_ref().unwrap().get_host(), "192.168.1.1");
     assert_eq!(authority.as_ref().unwrap().get_port().unwrap(), 123);
 
+    let authority = Authority::from_string("");
+
+    assert!(authority.is_none());
 }
