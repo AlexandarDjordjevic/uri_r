@@ -45,6 +45,13 @@ impl UserInfo {
     }
 }
 
+/// Struct representing URI Authority field <br />
+/// Available implementations: 
+/// - **new()** -> create new, empty Authority object
+/// - **from_string(&str)**-> create new Authority object from parsed string
+/// - **get_host()** -> get host 
+/// - **get_port()** -> get port number
+/// - **get_user_info()** -> get user info data
 pub struct Authority {
     user_info: Option<UserInfo>,
     host: String,
