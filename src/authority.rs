@@ -1,3 +1,4 @@
+use regex::Regex;
 #[allow(unused_variables)]
 #[allow(dead_code)]
 pub struct Authority {
@@ -9,81 +10,88 @@ pub struct Authority {
 #[allow(unused_variables)]
 #[allow(dead_code)]
 impl Authority{
-    fn get_authority_from_uri(string: &str) -> Option<String> {
-        let start_index = string.find("//");
-        match start_index {
-            Some(start_index) => {
-                let auth = &string[start_index + 2 ..];
-                let end_index = auth.find("/").unwrap_or(
-                    auth.find("#").unwrap_or(
-                        auth.find("?").unwrap_or(auth.len())
-                    )
-                );
-                Some(auth[..end_index].to_string())
-            },
-            None => None
+    pub fn new() -> Self {
+        Authority{
+            user_info: None,
+            host: "".to_string(),
+            port: None
         }
     }
 
-    fn parse_user_info(authority_str: &String) -> Option<String>{
-        let tokens : Vec<&str> = authority_str.split("@").collect();
-        if tokens.len() == 2 {
-            Some(tokens[0].to_string())
-        } else {
-            None
-        }
-    }
+    //Public functions ------------------------------
 
-    pub fn from_string(uri: &String) -> (Option<Authority>, &str) {
+    pub fn from_string(auth_string: &str) -> Option<Authority> {
         let mut authority= Authority {
             user_info: None,
             host: "".to_string(),
             port: None
         };
-        let str_auth = Authority::get_authority_from_uri(uri);
-        match &str_auth{
-            None => {
-                (None, uri)
+        //Convert to lower case
+        let auth_lc = &auth_string.to_lowercase();
+
+        //Create regex
+        let regex = Regex::new(r"[@]").unwrap();
+        let tokens: Vec<&str> = regex.split(auth_lc).collect();
+
+        match tokens.len() {
+            1 => authority.host = tokens[0].to_string(),
+            2 => {
+                authority.user_info = Some(tokens[0].to_string());
+                let regex = Regex::new(r"[:]").unwrap();
+                let host_port_tokens: Vec<&str> = regex.split(tokens[1]).collect();
+                match host_port_tokens.len() {
+                    1 => {
+                        authority.host = host_port_tokens[0].to_string();
+                    },
+                    2 => {
+                        authority.host = host_port_tokens[0].to_string();
+                        match host_port_tokens[1].parse::<u16>() {
+                            Ok(port) => {
+                                authority.port = Some(port);
+                            },
+                            Err(_) => ()
+                        }
+                    },
+                    _ => ()
+                }
             },
-            Some(auth) => {
-                println!("Authority string: {}", &auth);
-                authority.user_info = Authority::parse_user_info(auth);
-                (Some(authority), uri)
-            }
+            _ => ()
         }
+        Some(authority)
     }
-
-
 
     pub fn get_host(&self) -> &str {
         &self.host
     }
 
-    pub fn get_port(&self) -> &Option<u16> {
-        &self.port
+    pub fn get_port(&self) -> Option<&u16> {
+       match &self.port {
+           None => None,
+           Some(port) => Some(port)
+       }
     }
 
-    pub fn get_user_info(&self) -> &Option<String> {
-        &self.user_info
+    pub fn get_user_info(&self) -> Option<&String> {
+        match &self.user_info {
+            None => None,
+            Some(user_info) => Some(user_info)
+        }
     }
 }
 
 #[test]
-fn get_authority_from_uri(){
+fn test_authority_parser(){
     use super::*;
-    let test_cases = vec![
-        ("//foo:bar@www.example.com/", Some("foo:bar@www.example.com".to_string())),
-        ("//www.example.com/a:b", Some("www.example.com".to_string())),
-        ("//www.example.com/foo?a:b", Some("www.example.com".to_string())),
-        ("//www.example.com/foo#a:b", Some("www.example.com".to_string())),
-        ("//[v7.:]/", Some("[v7.:]".to_string())),
-        ("/:/foo", None),
-        ("/home/example", None),
-    ];
-    for test_case in test_cases.iter() {
-        let (uri, authority) = test_case;
-        println!("Authority: {:?}", Authority::get_authority_from_uri(uri));
-        assert_eq!(*authority, Authority::get_authority_from_uri(uri));
 
-    }
+    let authority = Authority::from_string("foo:bar@www.example.com");
+    assert_eq!(authority.as_ref().unwrap().get_host(), "www.example.com");
+    assert_eq!(authority.as_ref().unwrap().get_user_info().unwrap(), "foo:bar");
+    assert_eq!(authority.as_ref().unwrap().get_port(), None);
+
+    let authority = Authority::from_string( "john.doe@192.168.1.1:123");
+
+    assert_eq!(authority.as_ref().unwrap().get_user_info().unwrap(), "john.doe");
+    assert_eq!(authority.as_ref().unwrap().get_host(), "192.168.1.1");
+    assert_eq!(*authority.as_ref().unwrap().get_port().unwrap(), 123);
+
 }
