@@ -31,13 +31,13 @@ impl UserInfo {
 
     /// Method returns username <br />
     /// - ***return \[ &str \]***: Username string reference
-    fn get_username(&self) -> &str {
+    pub fn get_username(&self) -> &str {
         self.username.as_ref()
     }
 
     /// Method returns password <br />
     /// - ***return \[ Option\<&String\> \]***: Password if it is available, otherwise **None**
-    fn get_password(&self) -> Option<&String>{
+    pub fn get_password(&self) -> Option<&String>{
         match self.password.as_ref() {
             None => None,
             Some(password) => Some(password)
@@ -77,7 +77,6 @@ impl Authority{
     pub fn from_string(auth_string: &str) -> Option<Authority> {
         let mut authority= Authority::new();
         
-
         if auth_string.is_empty() {
             return None;
         }
@@ -85,12 +84,36 @@ impl Authority{
         //Convert to lower case string
         let auth_lc = &auth_string.to_lowercase();
 
+        let start = auth_lc.find("//");
+
+        if start.is_none(){
+            return None;
+        }
+        
+        let start_index = start.unwrap();
+        let regex = Regex::new("[/?#]").unwrap();
+        let tokens: Vec<&str> = regex.split(auth_lc[start_index + 2 ..].as_ref()).collect();
+
+        let auth_string = tokens[0];
+
         //Create regex
         let regex = Regex::new(r"[@]").unwrap();
-        let tokens: Vec<&str> = regex.split(auth_lc).collect();
+        let tokens: Vec<&str> = regex.split(auth_string).collect();
 
         match tokens.len() {
-            1 => authority.host = tokens[0].to_string(),
+            1 => {
+                let regex = Regex::new(r"[:]").unwrap();
+                let host_port_tokens: Vec<&str> = regex.split(tokens[0]).collect();
+                authority.host = host_port_tokens[0].to_string();
+                if host_port_tokens.len() == 2 {
+                    match host_port_tokens[1].parse::<u16>() {
+                        Ok(port) => {
+                            authority.port = Some(port);
+                        },
+                        Err(_) => ()
+                    }
+                }
+            },
             2 => {
                 authority.user_info = Some(UserInfo::from_string(tokens[0]));
                 let regex = Regex::new(r"[:]").unwrap();
@@ -146,14 +169,14 @@ impl Authority{
 fn test_authority_parser(){
     use super::*;
 
-    let authority = Authority::from_string("foo:bar@www.example.com");
+    let authority = Authority::from_string("https://foo:bar@www.example.com");
 
     assert_eq!(authority.as_ref().unwrap().get_host(), "www.example.com");
     assert_eq!(authority.as_ref().unwrap().get_user_info().unwrap().get_username(), "foo");
     assert_eq!(authority.as_ref().unwrap().get_user_info().unwrap().get_password().unwrap(), "bar");
     assert_eq!(authority.as_ref().unwrap().get_port(), None);
 
-    let authority = Authority::from_string( "john.doe@192.168.1.1:123");
+    let authority = Authority::from_string( "http://john.doe@192.168.1.1:123/");
 
     assert_eq!(authority.as_ref().unwrap().get_user_info().unwrap().get_username(), "john.doe");
     assert_eq!(authority.as_ref().unwrap().get_user_info().unwrap().get_password(), None);
